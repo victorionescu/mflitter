@@ -1,12 +1,9 @@
 <?php
-  include_once "config.php";
-  include_once "twitteroauth/OAuth.php";
-  include_once "twitteroauth/twitteroauth.php";
 
-  $connection = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET);
-  $temporary_credentials = $connection->getRequestToken(OAUTH_CALLBACK);
-
-  $redirect_url = $connection->getAuthorizeURL($temporary_credentials);
+session_start();
+if (isset($_SESSION["access_token"])) {
+  header("Location: unfollow.php");
+}
 ?>
 
 <!DOCTYPE html>
@@ -16,7 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
-    <link href="css/home.css" rel="stylesheet" media="screen">
+    <link href="css/landing.css" rel="stylesheet" media="screen">
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -45,7 +42,7 @@
           Using MFlitter is as easy as signing in with your Twitter account. Click on the button below and enjoy!
         </p>
         <p>
-          <a class="btn btn-lg btn-info" href="<?php echo $redirect_url; ?>">Sign in with Twitter</a>
+          <a class="btn btn-lg btn-info" href="twitter_redirect.php">Sign in with Twitter</a>
         </p>
       </div>
     </div>
