@@ -24,6 +24,14 @@ if (count($extract_friends_job ) != 1) {
 }
 
 $extract_friends_job = $extract_friends_job[0];
+
+$time_difference = time() - strtotime($extract_friends_job["issued_at"]);
+
+if ($time_difference > EXTRACT_FRIENDS_INTERVALS) {
+  $database->updateQuery("DELETE FROM `friends` WHERE `user_id`=" . $user["id"]);
+
+  $database->updateQuery("UPDATE `friends_jobs` SET `issued_at`=NOW(), `next_cursor`=-1 WHERE `user_id`=" . $user["id"]);
+}
 ?>
 
 <!DOCTYPE html>

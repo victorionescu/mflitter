@@ -10,6 +10,9 @@
       </form>
     </div>
   </div>
+  <div class="row">
+    <img id="loading-gif" src="loading.gif" style="max-height: 80px"/>
+  </div>
 </div>
 
 
@@ -58,6 +61,10 @@
         var friends_response = $.parseJSON(response);
         
         jobDone = friends_response["job_done"];
+
+        if (jobDone) {
+          $("#loading-gif").remove();
+        }
 
         var new_friends = friends_response["friends"];
         
