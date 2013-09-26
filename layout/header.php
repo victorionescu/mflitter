@@ -1,24 +1,29 @@
 <?php
+require_once "lib/libraries.php";
 
 session_start();
 if (!isset($_SESSION["access_token"])) {
-  header("Location: index.php");
-}
-
-$mysql_connection = mysql_connect("127.0.0.1", "root", "my38008s_52");
-if (!$mysql_connection) {
-  header("Location: twitter_clearsessions.php");
-}
-mysql_select_db("mflitter") or die("Could not select database 'mflitter'.");
-
-$query_statement = "SELECT * FROM `users` WHERE `screen_name`='" . $_SESSION["access_token"]["screen_name"] . "'";
-$mysql_query = mysql_query($query_statement, $mysql_connection);
-
-if (mysql_num_rows($mysql_query) != 1) {
   header("Location: twitter_clearsessions.php");
 }
 
-$row = mysql_fetch_assoc($mysql_query);
+$database = new Database();
+
+$user = $database->selectQuery("SELECT * FROM `users` WHERE `screen_name`='" . $_SESSION["access_token"]["screen_name"] . "'");
+
+if (count($user) != 1) {
+  header("Location: twitter_clearsessions.php");
+}
+
+$user = $user[0];
+
+$extract_friends_job =
+    $database->selectQuery("SELECT * FROM `friends_jobs` WHERE `screen_name`='" . $_SESSION["access_token"]["screen_name"] . "'");
+
+if (count($extract_friends_job ) != 1) {
+  die("CRITICAL ERROR: " . count($extract_friends_job) . " 'extract friends' jobs for user " . $screen_name . ".");
+}
+
+$extract_friends_job = $extract_friends_job[0];
 ?>
 
 <!DOCTYPE html>
@@ -38,7 +43,7 @@ $row = mysql_fetch_assoc($mysql_query);
       <script src="../../assets/js/respond.min.js"></script>
     <![endif]-->
   </head>
-  <body rel="<?php echo $row["id"]; ?>">
+  <body rel="<?php echo $user["id"]; ?>">
     <div class="navbar navbar-default navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">

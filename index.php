@@ -1,9 +1,12 @@
 <?php
+require_once "lib/libraries.php";
 
 session_start();
 if (isset($_SESSION["access_token"])) {
   header("Location: unfollow.php");
 }
+
+//$database = new Database();
 ?>
 
 <!DOCTYPE html>

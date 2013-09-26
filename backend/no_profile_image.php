@@ -1,29 +1,29 @@
 <?php
-  if (!isset($_GET["user_id"])) {
-    die("User ID is not set");
-  }
+require_once "../lib/libraries.php";
 
-  if (!isset($_GET["lower_bound"])) {
-    die("Lower bound is not set.");
-  }  
+if (!isset($_POST["user_id"]) || !isset($_POST["lower_bound"])) {
+  die("Both User ID and Lower Bound have to be set.");
+}
 
-  $mysql_connection = mysql_connect("127.0.0.1", "root", "my38008s_52");
+$database = new Database();
 
-  if (!$mysql_connection) {
-    die("Could not connect to MySQL: " . mysql_error());
-  }
-  mysql_select_db("mflitter") or die("Could not select database 'mflitter'.");
+$friends = $database->selectQuery("SELECT * FROM `friends` WHERE `default_profile_image` IS TRUE AND " .
+                                                                "`user_id`='" . $_POST["user_id"] . "' AND " .
+                                                                "`id`>" . $_POST["lower_bound"] . " " .
+                                                                "ORDER BY `id` ASC");
 
-  $query_statement = "SELECT * FROM `friends` WHERE  `default_profile_image` IS TRUE AND `user_id`=" . $_GET["user_id"] . 
-      " AND `id`>" . $_GET["lower_bound"] . " ORDER BY `id` ASC";
+$job = $database->selectQuery("SELECT * FROM `friends_jobs` WHERE `user_id`='" . $_POST["user_id"] . "'");
 
-  $mysql_query = mysql_query($query_statement, $mysql_connection);
+if (count($job) != 1) {
+  die("CRITICAL ERROR: " . count($job) . " jobs for user " . $_POST["user_id"] . ".");
+}
 
-  $results = array();
+$job = $job[0];
 
-  while ($row = mysql_fetch_assoc($mysql_query)) {
-    array_push($results, $row);
-  }
+$job_done = ($job["next_cursor"] == 0);
 
-  echo json_encode($results);
-?>
+$response = array();
+$response["job_done"] = $job_done;
+$response["friends"] = $friends;
+
+echo json_encode($response);

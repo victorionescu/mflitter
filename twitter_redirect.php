@@ -1,8 +1,8 @@
 <?php
 
+require_once "lib/libraries.php";
+
 session_start();
-require_once "config.php";
-require_once "twitteroauth/twitteroauth.php";
 
 /* Build TwitterOAuth object with client credentials. */
 $connection = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET);

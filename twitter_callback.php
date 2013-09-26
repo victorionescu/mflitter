@@ -5,10 +5,11 @@
  * Verify credentials and redirect to based on response from Twitter.
  */
 
-/* Start session and load lib */
+/* Load libraries. */
+require_once "lib/libraries.php";
+
 session_start();
-require_once("config.php");
-require_once("twitteroauth/twitteroauth.php");
+
 
 /* If the oauth_token is old redirect to the connect page. */
 if (isset($_REQUEST["oauth_token"]) && $_SESSION["oauth_token"] !== $_REQUEST["oauth_token"]) {
@@ -35,29 +36,21 @@ if ($connection->http_code == 200) {
   /* The user has been verified and the access tokens can be saved for future use. */
   $_SESSION["status"] = "verified";
 
-  /* TODO(victorionescu46@gmail.com): Factor this out in an OOP design. */
   /* Save the token to the database, if it is not already saved. */
-  $mysql_connection = mysql_connect("127.0.0.1", "root", "my38008s_52");
-  if (!$mysql_connection) {
-    die("Could not connect: " . mysql_error());
-  }
-  mysql_select_db("mflitter") or die("Could not select database `mflitter`.");
-
-  $query_statement = "SELECT * FROM `users` WHERE `screen_name`='" . $access_token["screen_name"] . "'";
-  $query = mysql_query($query_statement, $mysql_connection);
-  if (mysql_num_rows($query) == 0) {
-    $insert_query_statement = "INSERT INTO users(screen_name, user_id, access_token, access_token_secret) " .
-        "VALUES('" . $access_token["screen_name"] . "', '" . $access_token["user_id"] . "', '" .
-        $access_token["oauth_token"] . "', '" . $access_token["oauth_token_secret"] . "')";
-    if (!mysql_query($insert_query_statement)) {
-      die("Problem while creating the user: " . mysql_error());
+  $database = new Database();
+  $users = $database->selectQuery("SELECT * FROM `users` WHERE `screen_name`='" . $access_token["screen_name"] . "'");
+  
+  if (count($users) == 0) {
+    $user_id = TwitterController::createUser($access_token["screen_name"], $access_token["user_id"],
+                                             $access_token["oauth_token"], $access_token["oauth_token_secret"]);
+    if ($user_id == -1) {
+      die("CRITICAL ERROR: Could not create user: " . mysql_error());
     }
 
-    $insert_query_statement = "INSERT INTO friends_jobs(user_id, screen_name, issued_at, next_cursor) VALUES" .
-        "(" . mysql_insert_id() . ", '" . $access_token["screen_name"] . "', NOW(), -1)";
-    if (!mysql_query($insert_query_statement)) {
-      die("Problem while creating the job: " . mysql_error());
-    }  
+    if (TwitterController::setExtractFriendsJob($user_id, $access_token["screen_name"]) == -1) {
+      die("CRITICAL ERROR: Could not create 'extract friends' job for user: " . mysql_error());
+    }
+
   }
   
   header("Location: ./index.php");
